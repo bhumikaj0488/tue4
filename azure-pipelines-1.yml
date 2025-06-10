@@ -1,0 +1,29 @@
+trigger:
+- main  # Change if your branch is not 'main'
+
+pool:
+  name: Default  # Use your self-hosted agent
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean verify'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+  displayName: 'Maven Build and Test with Coverage'
+
+# ✅ Publish JUnit Test Results
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    testRunTitle: 'Maven Unit Tests'
+  condition: succeededOrFailed()
+
+# ✅ Publish Code Coverage
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'JaCoCo'
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/jacoco.xml'
+    reportDirectory: '$(System.DefaultWorkingDirectory)/**/jacoco-html'
+    failIfCoverageEmpty: true
